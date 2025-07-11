@@ -2,6 +2,7 @@ import { Context, Schema, Random } from 'koishi'
 import { CharacterManager } from './character'
 import { COC7GameLogic } from './coc7th'
 import { DND5EGameLogic } from './dnd5e'
+import { Template } from './template'
 
 export const name = 'coc-dnd-dice'
 
@@ -39,11 +40,21 @@ function parseDiceExpression(expr: string, defaultSize: number = 100): { count: 
 
 // 检定成功度计算
 function getSuccessLevel(result: number, target: number): string {
-  if (result <= target / 5) return '大成功'
-  if (result <= target / 2) return '极难成功'
-  if (result <= target) return '成功'
-  if (result >= 96) return '大失败'
-  return '失败'
+  const levels = Template.getTemplate('success_levels')
+  if (!levels) {
+    // 后备默认值
+    if (result <= target / 5) return '大成功'
+    if (result <= target / 2) return '极难成功'
+    if (result <= target) return '成功'
+    if (result >= 96) return '大失败'
+    return '失败'
+  }
+
+  if (result <= target / 5) return levels['大成功']
+  if (result <= target / 2) return levels['极难成功']
+  if (result <= target) return levels['成功']
+  if (result >= 96) return levels['大失败']
+  return levels['失败']
 }
 
 // 全局角色卡管理器
@@ -54,6 +65,9 @@ const coc7Logic = new COC7GameLogic()
 const dnd5eLogic = new DND5EGameLogic()
 
 export function apply(ctx: Context, config: Config) {
+  // 初始化模板系统
+  Template.init(ctx.baseDir)
+
   // 基础掷骰命令 .r
   ctx.command('r [expression]', '掷骰子')
     .example('.r d20  掷一个20面骰')
@@ -62,16 +76,19 @@ export function apply(ctx: Context, config: Config) {
     .action(async ({ session }, expression = 'd') => {
       const parsed = parseDiceExpression(expression, 100)
       if (!parsed) {
-        return '骰子表达式格式错误！请使用如 d20、3d6 等格式'
+        const errorMsg = Template.getTemplate('system_messages', 'dice_format_error') || '骰子表达式格式错误！请使用如 d20、3d6 等格式'
+        return errorMsg
       }
 
       const { count, size } = parsed
 
       if (count > 100) {
-        return `骰子数量超过限制（最大100个）`
+        const limitMsg = Template.getTemplate('system_messages', 'dice_count_limit') || '骰子数量超过限制（最大100个）'
+        return limitMsg
       }
       if (size > 1000) {
-        return `骰子面数超过限制（最大1000面）`
+        const limitMsg = Template.getTemplate('system_messages', 'dice_size_limit') || '骰子面数超过限制（最大1000面）'
+        return limitMsg
       }
 
       const result = rollDice(count, size)
@@ -89,19 +106,27 @@ export function apply(ctx: Context, config: Config) {
     .example('.ra 侦查     进行侦查检定，使用默认d100')
     .action(async ({ session }, skill, target) => {
       if (!skill) {
-        return '请指定技能名称！'
+        const msg = Template.getTemplate('system_messages', 'skill_name_required') || '请指定技能名称！'
+        return msg
       }
 
       const targetValue = target ? parseInt(target) : 70 // 默认目标值
       if (isNaN(targetValue) || targetValue < 1 || targetValue > 100) {
-        return '目标值必须在1-100之间！'
+        const msg = Template.getTemplate('system_messages', 'target_value_range') || '目标值必须在1-100之间！'
+        return msg
       }
 
       const result = rollDice(1, 100)
       const rollValue = result.total
       const successLevel = getSuccessLevel(rollValue, targetValue)
 
-      return `${session.username} 进行${skill}检定：d100=${rollValue}/${targetValue} ${successLevel}`
+      const format = Template.getTemplate('check_results', 'format') || '{player} 进行{skill}检定：d100={roll}/{target} {result}'
+      return format
+        .replace('{player}', session.username)
+        .replace('{skill}', skill)
+        .replace('{roll}', rollValue.toString())
+        .replace('{target}', targetValue.toString())
+        .replace('{result}', successLevel)
     })
 
   // 代替检定命令
@@ -114,7 +139,8 @@ export function apply(ctx: Context, config: Config) {
 
       const targetValue = parseInt(target)
       if (isNaN(targetValue) || targetValue < 1 || targetValue > 100) {
-        return '目标值必须在1-100之间！'
+        const msg = Template.getTemplate('system_messages', 'target_value_range') || '目标值必须在1-100之间！'
+        return msg
       }
 
       const result = rollDice(1, 100)
@@ -124,7 +150,14 @@ export function apply(ctx: Context, config: Config) {
       // 清理@符号
       const cleanSubstitute = substitute.replace(/^@/, '')
 
-      return `${session.username} 代替 ${cleanSubstitute} 进行${skill}检定：d100=${rollValue}/${targetValue} ${successLevel}`
+      const format = Template.getTemplate('check_results', 'format_proxy') || '{player} 代替 {target} 进行{skill}检定：d100={roll}/{targetValue} {result}'
+      return format
+        .replace('{player}', session.username)
+        .replace('{target}', cleanSubstitute)
+        .replace('{skill}', skill)
+        .replace('{roll}', rollValue.toString())
+        .replace('{targetValue}', targetValue.toString())
+        .replace('{result}', successLevel)
     })
 
   // 设置默认骰子面数
@@ -147,4 +180,7 @@ export function apply(ctx: Context, config: Config) {
 
   // 注册 DND5E 相关命令
   dnd5eLogic.registerCommands(ctx, characterManager)
+
+  // 注册模板管理命令
+  Template.registerCommands(ctx)
 }
