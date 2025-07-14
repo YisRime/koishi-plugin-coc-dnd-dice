@@ -2,13 +2,21 @@
   "name": "koishi-plugin-coc-dnd-dice",
   "description": "基于各种跑团规则（如 CoC、D&D）的骰点服务",
   "version": "0.0.1",
+  "contributors": [
+    "Yis_Rime <yis_rime@outlook.com>"
+  ],
+  "homepage": "https://github.com/YisRime/koishi-plugin-coc-dnd-dice",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/YisRime/koishi-plugin-coc-dnd-dice.git"
+  },
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
     "lib",
     "dist"
   ],
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "scripts": {},
   "keywords": [
     "chatbot",
