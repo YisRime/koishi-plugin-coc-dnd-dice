@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-coc-dnd-dice",
   "description": "基于各种跑团规则（如 CoC、D&D）的骰点服务",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "contributors": [
     "Yis_Rime <yis_rime@outlook.com>"
   ],
