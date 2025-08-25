@@ -19,7 +19,8 @@ export class DND5EGameLogic {
   // 注册 DND5E 相关命令
   registerCommands(ctx: any, characterManager: any) {
     // DND5E 生成随机属性
-    ctx.command('dnd [count]', '生成DND5E随机属性')
+    ctx.subcommand('dnd [count]', '生成DND5E随机属性')
+      .usage('生成D&D5E规则的角色属性（4d6舍去最低值）。可以指定生成数量。')
       .example('dnd     生成一组属性')
       .example('dnd 3   生成三组属性')
       .action(async ({ session }, count) => {
@@ -52,7 +53,8 @@ export class DND5EGameLogic {
       })
 
     // 优势/劣势掷骰命令，扩展原有的 r 命令
-    ctx.command('r').subcommand('d优势', '进行优势掷骰')
+    ctx.subcommand('r').subcommand('d优势', '进行优势掷骰')
+      .usage('进行一次优势掷骰，投掷两次d20并取较高结果。')
       .example('r d优势  掷两次d20取较高值')
       .action(async ({ session }) => {
         const roll1 = Random.int(1, 21)
@@ -62,7 +64,8 @@ export class DND5EGameLogic {
         return `${session.username} 进行优势掷骰：d20=[${roll1}, ${roll2}]，取较高值 ${result}`
       })
 
-    ctx.command('r').subcommand('d劣势', '进行劣势掷骰')
+    ctx.subcommand('r').subcommand('d劣势', '进行劣势掷骰')
+      .usage('进行一次劣势掷骰，投掷两次d20并取较低结果。')
       .example('r d劣势  掷两次d20取较低值')
       .action(async ({ session }) => {
         const roll1 = Random.int(1, 21)
@@ -73,7 +76,8 @@ export class DND5EGameLogic {
       })
 
     // 检定命令
-    ctx.command('rc [advantage] <skill> [modifier]', '进行DND5E检定')
+    ctx.subcommand('rc [advantage] <skill> [modifier]', '进行DND5E检定')
+      .usage('进行D&D5E的技能检定。可以指定优势、劣势，并附加调整值。\n参数advantage可以是"优势"或"劣势"。\n参数modifier可以是技能名称的一部分，如"运动+5"。')
       .example('rc 运动      进行运动检定')
       .example('rc 优势 运动  进行优势运动检定')
       .example('rc 劣势 运动  进行劣势运动检定')
@@ -116,7 +120,8 @@ export class DND5EGameLogic {
       })
 
     // 先攻命令
-    ctx.command('ri [name]', '掷先攻并加入列表')
+    ctx.subcommand('ri [name]', '掷先攻并加入列表')
+      .usage('投掷先攻（d20+敏捷调整值），并将角色加入先攻列表。\n若不指定名称，则为当前绑定的角色卡或用户自身掷先攻。')
       .example('ri        为当前角色掷先攻')
       .example('ri 哥布林  为哥布林掷先攻')
       .action(async ({ session }, name) => {
@@ -133,7 +138,8 @@ export class DND5EGameLogic {
       })
 
     // 先攻列表命令
-    const init = ctx.command('init', '显示先攻列表')
+    const init = ctx.subcommand('init', '显示先攻列表')
+      .usage('管理战斗轮的先攻顺序。')
       .example('init  显示当前先攻列表')
       .action(async ({ session }) => {
         if (this.initiativeList.length === 0) {
@@ -150,6 +156,7 @@ export class DND5EGameLogic {
 
     // 清空先攻列表
     init.subcommand('.clear', '清空先攻列表')
+      .usage('清空当前的先攻列表，用于战斗结束。')
       .example('init.clear  清空当前先攻列表')
       .action(async ({ session }) => {
         this.initiativeList = []
@@ -157,7 +164,8 @@ export class DND5EGameLogic {
       })
 
     // 随机D&D名字
-    ctx.command('namednd <race> [count]', '生成随机D&D名字')
+    ctx.subcommand('namednd <race> [count]', '生成随机D&D名字')
+      .usage('根据D&D5E的种族模板生成随机姓名。\n可用种族：人类、精灵、矮人、半身人、龙裔、提夫林。')
       .example('namednd 人类    生成一个人类名字')
       .example('namednd 精灵 3  生成三个精灵名字')
       .action(async ({ session }, race, count) => {

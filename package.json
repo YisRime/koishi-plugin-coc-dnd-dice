@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-coc-dnd-dice",
-  "description": "基于各种跑团规则（如 CoC、D&D）的骰点服务",
-  "version": "1.0.1",
+  "description": "多功能跑团（TRPG）骰点插件，内置对《克苏鲁的呼唤》（CoC7）和《龙与地下城》（D&D5E）等多种规则的支持。",
+  "version": "1.0.2",
   "contributors": [
     "Yis_Rime <yis_rime@outlook.com>"
   ],

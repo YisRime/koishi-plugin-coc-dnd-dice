@@ -27,7 +27,8 @@ export class COC7GameLogic {
   // 注册 COC7 相关命令
   registerCommands(ctx: any, characterManager: any) {
     // COC7 生成随机属性
-    ctx.command('coc [count]', '生成COC7随机属性')
+    ctx.subcommand('coc [count]', '生成COC7随机属性')
+      .usage('生成CoC7规则的调查员属性。可以一次生成多组供选择。')
       .example('coc     生成一组属性')
       .example('coc 3   生成三组属性')
       .action(async ({ session }, count) => {
@@ -54,7 +55,8 @@ export class COC7GameLogic {
       })
 
     // 理智检定
-    ctx.command('sc <success>/<failure>', '进行理智检定')
+    ctx.subcommand('sc <success>/<failure>', '进行理智检定')
+      .usage('进行一次理智检定(Sanity Check)。\n格式为 <成功损失>/<失败损失>，例如 1/1d6。目前仅支持纯数字损失。')
       .example('sc 1/3   成功失去1点理智，失败失去3点')
       .action(async ({ session }, expression) => {
         const match = expression.match(/^(\d+)\/(\d+)$/)
@@ -75,7 +77,8 @@ export class COC7GameLogic {
       })
 
     // 对抗检定
-    ctx.command('rav <skill1> <skill2> [opponent]', '进行对抗检定')
+    ctx.subcommand('rav <skill1> <skill2> [opponent]', '进行对抗检定')
+      .usage('进行一次对抗检定。双方各自掷骰，比较成功等级来决定胜负。\n若不指定对手，则默认为与"AI"对抗。')
       .example('rav 侦查 潜行      自己侦查对抗AI潜行')
       .example('rav 侦查 潜行 @张三  自己侦查对抗张三潜行')
       .action(async ({ session }, skill1, skill2, opponent) => {
@@ -97,7 +100,9 @@ ${opponentName}：d100=${result.roll2} ${result.result2}
       })
 
     // 奖励骰检定
-    ctx.command('rab [count] <skill> [target]', '进行奖励骰检定')
+    ctx.subcommand('rab [count] <skill> [target]', '进行奖励骰检定')
+      .usage('进行一次奖励骰检定。投掷一个主骰和若干个奖励骰（十位），取最小的十位数组合个位数作为最终结果。')
+      .example('rab 侦查 70     进行1个奖励骰的侦查检定')
       .example('rab 2 侦查 70  进行2个奖励骰的侦查检定')
       .action(async ({ session }, count, skill, target) => {
         // 如果第一个参数是技能名，调整参数
@@ -128,7 +133,9 @@ ${opponentName}：d100=${result.roll2} ${result.result2}
       })
 
     // 惩罚骰检定
-    ctx.command('rap [count] <skill> [target]', '进行惩罚骰检定')
+    ctx.subcommand('rap [count] <skill> [target]', '进行惩罚骰检定')
+      .usage('进行一次惩罚骰检定。投掷一个主骰和若干个惩罚骰（十位），取最大的十位数组合个位数作为最终结果。')
+      .example('rap 侦查 70     进行1个惩罚骰的侦查检定')
       .example('rap 2 侦查 70  进行2个惩罚骰的侦查检定')
       .action(async ({ session }, count, skill, target) => {
         // 如果第一个参数是技能名，调整参数
@@ -159,7 +166,8 @@ ${opponentName}：d100=${result.roll2} ${result.result2}
       })
 
     // 即时疯狂症状
-    ctx.command('ti', '获取即时疯狂症状')
+    ctx.subcommand('ti', '获取即时疯狂症状')
+      .usage('从内置的疯狂症状表中随机抽取一条即时疯狂症状。')
       .example('ti  获取一个即时疯狂症状')
       .action(async ({ session }) => {
         const symptom = this.getImmediateMadness()
@@ -167,7 +175,8 @@ ${opponentName}：d100=${result.roll2} ${result.result2}
       })
 
     // 总结性疯狂症状
-    ctx.command('li', '获取总结性疯狂症状')
+    ctx.subcommand('li', '获取总结性疯狂症状')
+      .usage('从内置的疯狂症状表中随机抽取一条总结性疯狂症状。')
       .example('li  获取一个总结性疯狂症状')
       .action(async ({ session }) => {
         const symptom = this.getSummaryMadness()
@@ -175,7 +184,8 @@ ${opponentName}：d100=${result.roll2} ${result.result2}
       })
 
     // 技能成长
-    ctx.command('en <skill>', '进行技能成长检定')
+    ctx.subcommand('en <skill>', '进行技能成长检定')
+      .usage('为当前角色卡的指定技能进行成长检定。检定成功（d100>技能值）则增加1d10技能点。')
       .example('en 侦查  对侦查技能进行成长检定')
       .action(async ({ session }, skill) => {
         if (!skill) {
@@ -206,7 +216,8 @@ d100=${result.roll} ≤ ${currentSkill} 失败，技能未成长`
       })
 
     // 设置房规
-    ctx.command('setcoc [ruleId]', '设置COC7房规')
+    ctx.subcommand('setcoc [ruleId]', '设置COC7房规')
+      .usage('设置或查看当前会话的COC7房规。房规可能会影响检定规则。')
       .example('setcoc details  列出所有房规')
       .example('setcoc 1        设置房规1')
       .action(async ({ session }, ruleId) => {

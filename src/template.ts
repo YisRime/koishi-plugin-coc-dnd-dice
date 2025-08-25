@@ -415,10 +415,12 @@ export class Template {
   // 注册简化的模板管理命令
   static registerCommands(ctx: any) {
     // 模板管理命令组
-    const template = ctx.command('template', '模板管理')
+    const template = ctx.subcommand('template', '模板管理')
+      .usage('用于管理插件的模板文件，支持查看、导出、加载和重载。')
 
     // 列出所有模板
     template.subcommand('.list', '列出所有模板')
+      .usage('列出所有可用的模板，包括内置模板和自定义模板文件。')
       .example('template.list  列出所有可用模板')
       .action(async ({ session }) => {
         const templates = this.listTemplates()
@@ -438,6 +440,7 @@ export class Template {
 
     // 查看模板内容
     template.subcommand('.show <name> [path]', '查看模板内容')
+      .usage('查看指定模板的完整内容或模板内特定路径的数据。\n路径使用点号(.)进行分隔。')
       .example('template.show coc7_skills          查看COC7技能模板')
       .example('template.show coc7_skills.力量     查看力量技能详情')
       .action(async ({ session }, name, path) => {
@@ -459,6 +462,7 @@ export class Template {
 
     // 加载模板文件
     template.subcommand('.load <fileName>', '加载指定的模板文件')
+      .usage('从 templates 文件夹中加载一个自定义的 .json 模板文件。')
       .example('template.load my_coc7_skills.json  加载自定义技能模板')
       .action(async ({ session }, fileName) => {
         if (!fileName) {
@@ -484,6 +488,7 @@ export class Template {
 
     // 导出默认模板
     template.subcommand('.export', '导出所有默认模板到文件')
+      .usage('将所有内置的默认模板导出为 .json 文件到 templates 文件夹，方便用户进行自定义修改。')
       .example('template.export  导出默认模板')
       .action(async ({ session }) => {
         try {
@@ -496,6 +501,7 @@ export class Template {
 
     // 重载模板缓存
     template.subcommand('.reload', '重载模板缓存')
+      .usage('清除所有模板的内存缓存。当您在外部修改了模板文件后，使用此命令使其立即生效。')
       .example('template.reload  清除缓存并重新加载模板')
       .action(async ({ session }) => {
         this.clearCache()

@@ -94,10 +94,12 @@ export class CharacterManager {
   // 注册角色卡相关命令
   registerCommands(ctx: any) {
     // 角色卡相关命令组
-    const pc = ctx.command('pc', '角色卡管理')
+    const pc = ctx.subcommand('pc', '角色卡管理')
+      .usage('用于创建和管理您的角色卡。')
 
     // 新建空白角色卡
     pc.subcommand('.new <name>', '新建空白角色卡')
+      .usage('创建一个新的空白角色卡，并自动绑定为当前活动卡。')
       .example('pc.new 调查员  创建名为"调查员"的角色卡')
       .action(async ({ session }, name) => {
         if (!name) {
@@ -114,6 +116,7 @@ export class CharacterManager {
 
     // 列出角色卡
     pc.subcommand('.list', '列出所有角色卡')
+      .usage('显示您所拥有的全部角色卡列表。★表示当前绑定的角色卡。')
       .example('pc.list  列出当前用户的所有角色卡')
       .action(async ({ session }) => {
         const cards = this.getUserCards(session.userId)
@@ -132,6 +135,7 @@ export class CharacterManager {
 
     // 绑定角色卡
     pc.subcommand('.tag <name>', '绑定角色卡')
+      .usage('将会话与指定的角色卡绑定。后续所有角色卡相关操作（如st, ra）都将作用于此卡。')
       .example('pc.tag 调查员  绑定名为"调查员"的角色卡')
       .action(async ({ session }, name) => {
         if (!name) {
@@ -148,6 +152,7 @@ export class CharacterManager {
 
     // 删除角色卡
     pc.subcommand('.del <name>', '删除角色卡')
+      .usage('永久删除一张指定的角色卡。此操作不可撤销。')
       .example('pc.del 调查员  删除名为"调查员"的角色卡')
       .action(async ({ session }, name) => {
         if (!name) {
@@ -163,7 +168,8 @@ export class CharacterManager {
       })
 
     // 修改角色名
-    ctx.command('nn <newName>', '修改当前绑定角色卡的名称')
+    pc.subcommand('.nn <newName>', '修改当前绑定角色卡的名称')
+      .usage('为当前绑定的角色卡设置一个新的名称。')
       .example('nn 新名字  修改当前角色卡名称')
       .action(async ({ session }, newName) => {
         if (!newName) {
@@ -185,7 +191,8 @@ export class CharacterManager {
       })
 
     // 录入数据
-    const st = ctx.command('st <attribute> [value]', '录入或查看角色属性')
+    const st = ctx.subcommand('st <attribute> [value]', '录入或查看角色属性')
+      .usage('为当前绑定的角色卡设置或查看属性/技能值。\n提供属性和值以设置，只提供属性名以查看。')
       .example('st 力量 60  设置力量属性为60')
       .example('st 力量     查看力量属性')
       .action(async ({ session }, attribute, value) => {
@@ -227,6 +234,7 @@ export class CharacterManager {
 
     // 列出数据
     st.subcommand('.show [attribute]', '显示角色属性')
+      .usage('显示当前角色卡的一个或全部属性/技能值。')
       .example('st.show       显示所有属性')
       .example('st.show 力量  显示力量属性')
       .action(async ({ session }, attribute) => {
@@ -258,7 +266,8 @@ export class CharacterManager {
       })
 
     // 自动名片功能
-    ctx.command('sn', '显示当前角色的名片信息')
+    st.subcommand('.sn', '显示当前角色的名片信息')
+      .usage('以规整的格式显示当前绑定角色卡的主要属性和技能，方便快速查阅。')
       .example('sn  显示当前绑定角色的详细信息')
       .action(async ({ session }) => {
         const activeCard = this.getCard(session.userId)
@@ -296,7 +305,8 @@ ${allAttrList}
       })
 
     // 角色检定命令
-    ctx.command('ra <skill>', '使用角色卡进行技能检定')
+    ctx.subcommand('ra <skill>', '使用角色卡进行技能检定')
+      .usage('使用当前绑定角色卡的技能值进行一次检定。会自动判断成功等级。')
       .example('ra 侦查  使用角色卡的侦查技能进行检定')
       .action(async ({ session }, skill) => {
         if (!skill) {
@@ -330,7 +340,8 @@ ${allAttrList}
       })
 
     // 技能初始化命令
-    ctx.command('st.init [occupation]', '初始化角色技能值')
+    st.subcommand('.init [occupation]', '初始化角色技能值')
+      .usage('为当前角色卡快速设置技能初始值。\n不带参数时，将所有COC7技能设置为模板中的初始值。\n带职业名参数时，将根据职业模板设置相关技能值。')
       .example('st.init         根据COC7技能模板初始化所有技能')
       .example('st.init 调查员  根据调查员职业模板初始化技能')
       .action(async ({ session }, occupation) => {
@@ -371,7 +382,8 @@ ${allAttrList}
       })
 
     // 技能列表命令
-    ctx.command('st.skills [category]', '显示技能列表')
+    st.subcommand('.skills [category]', '显示技能列表')
+      .usage('查询COC7技能模板中的技能列表及其初始值。\n可以按类别（如"基础属性"、"技能"）进行筛选。')
       .example('st.skills           显示所有技能')
       .example('st.skills 基础属性  显示基础属性技能')
       .action(async ({ session }, category) => {
@@ -398,7 +410,8 @@ ${allAttrList}
       })
 
     // 职业列表命令
-    ctx.command('st.occupations', '显示COC7职业列表')
+    st.subcommand('.occupations', '显示COC7职业列表')
+      .usage('显示所有预设的COC7职业模板，包括职业技能和信用评级范围。')
       .example('st.occupations  显示所有可用职业')
       .action(async ({ session }) => {
         const occupations = Template.getTemplate('coc7_occupations')
@@ -414,7 +427,8 @@ ${allAttrList}
       })
 
     // 装备查询命令
-    ctx.command('st.equipment [category]', '显示装备列表')
+    st.subcommand('.equipment [category]', '显示装备列表')
+      .usage('查询COC7预设的装备模板。\n不指定类别时，显示所有装备类别。\n指定类别（如"武器"、"防具"）时，显示该类别下的所有装备详情。')
       .example('st.equipment        显示所有装备')
       .example('st.equipment 武器   显示武器装备')
       .action(async ({ session }, category) => {
@@ -446,8 +460,6 @@ ${allAttrList}
           return `装备类别：\n${allCategories}\n\n使用 st.equipment <类别> 查看具体装备`
         }
       })
-
-    // ...existing code...
   }
 
   // 创建新角色卡

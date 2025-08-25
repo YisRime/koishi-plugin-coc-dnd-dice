@@ -82,8 +82,11 @@ export function apply(ctx: Context, config: Config) {
   // 初始化模板系统
   Template.init(ctx.baseDir)
 
+  const dice = ctx.command('dice', '掷骰')
+
   // 基础掷骰命令 .r
-  ctx.command('r [expression]', '掷骰子')
+  dice.subcommand('r [expression]', '掷骰子')
+    .usage('进行一次或多次掷骰。\n支持多种表达式格式，如 d20, 3d6, d (默认d100), 20 (默认1d20)。')
     .example('.r d20  掷一个20面骰')
     .example('.r 3d6  掷三个6面骰')
     .example('.r 20   掷一个20面骰')
@@ -115,7 +118,8 @@ export function apply(ctx: Context, config: Config) {
     })
 
   // 检定命令 .ra
-  ctx.command('ra <skill> [target]', '进行技能检定')
+  dice.subcommand('ra <skill> [target]', '进行技能检定')
+    .usage('进行一次通用的技能检定，并根据结果和目标值判断成功等级。若不指定目标值，默认为70。')
     .example('.ra 侦查 70  进行侦查检定，目标值70')
     .example('.ra 侦查     进行侦查检定，使用默认d100')
     .action(async ({ session }, skill, target) => {
@@ -144,7 +148,8 @@ export function apply(ctx: Context, config: Config) {
     })
 
   // 代替检定命令
-  ctx.command('ra <skill> <target> <substitute>', '代替他人进行检定')
+  dice.subcommand('ra <skill> <target> <substitute>', '代替他人进行检定')
+    .usage('代替另一位用户（或NPC）进行技能检定。需要提供技能、目标值和代替目标。')
     .example('.ra 侦查 70 @张三  代替张三进行侦查检定')
     .action(async ({ session }, skill, target, substitute) => {
       if (!skill || !target || !substitute) {
@@ -175,7 +180,8 @@ export function apply(ctx: Context, config: Config) {
     })
 
   // 设置默认骰子面数
-  ctx.command('set <size>', '设置默认骰子面数')
+  dice.subcommand('set <size>', '设置默认骰子面数')
+    .usage('设置 .r 命令在未指定骰子面数时（如.r d）的默认面数。注意：此功能当前仅为占位，未完全实现。')
     .example('.set 20  设置默认骰子为20面')
     .action(async ({ session }, size) => {
       const diceSize = parseInt(size)
@@ -187,14 +193,14 @@ export function apply(ctx: Context, config: Config) {
     })
 
   // 注册角色卡相关命令
-  characterManager.registerCommands(ctx)
+  characterManager.registerCommands(dice)
 
   // 注册 COC7 相关命令
-  coc7Logic.registerCommands(ctx, characterManager)
+  coc7Logic.registerCommands(dice, characterManager)
 
   // 注册 DND5E 相关命令
-  dnd5eLogic.registerCommands(ctx, characterManager)
+  dnd5eLogic.registerCommands(dice, characterManager)
 
   // 注册模板管理命令
-  Template.registerCommands(ctx)
+  Template.registerCommands(dice)
 }
