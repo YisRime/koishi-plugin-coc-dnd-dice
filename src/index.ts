@@ -54,21 +54,27 @@ function parseDiceExpression(expr: string, defaultSize: number = 100): { count: 
 
 // 检定成功度计算
 function getSuccessLevel(result: number, target: number): string {
-  const levels = Template.getTemplate('success_levels')
-  if (!levels) {
-    // 后备默认值
-    if (result <= target / 5) return '大成功'
-    if (result <= target / 2) return '极难成功'
-    if (result <= target) return '成功'
-    if (result >= 96) return '大失败'
-    return '失败'
+  // 大成功
+  if (result === 1) return '大成功';
+
+  // 大失败
+  if (result === 100 || (target < 50 && result >= 96)) {
+    return '大失败';
   }
 
-  if (result <= target / 5) return levels['大成功']
-  if (result <= target / 2) return levels['极难成功']
-  if (result <= target) return levels['成功']
-  if (result >= 96) return levels['大失败']
-  return levels['失败']
+  // 成功等级判断
+  if (result <= target) {
+    if (result <= Math.floor(target / 5)) {
+      return '极难成功';
+    } else if (result <= Math.floor(target / 2)) {
+      return '困难成功';
+    } else {
+      return '常规成功';
+    }
+  }
+
+  // 失败
+  return '失败';
 }
 
 // 全局角色卡管理器

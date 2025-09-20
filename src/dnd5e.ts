@@ -120,21 +120,49 @@ export class DND5EGameLogic {
       })
 
     // 先攻命令
-    ctx.subcommand('ri [name]', '掷先攻并加入列表')
-      .usage('投掷先攻（d20+敏捷调整值），并将角色加入先攻列表。\n若不指定名称，则为当前绑定的角色卡或用户自身掷先攻。')
+    ctx.subcommand('ri [modifierArg] [target]', '掷先攻并加入列表')
+      .usage('投掷先攻（d20+调整值），并将角色加入先攻列表。\n可以指定调整值（如 +4 或 -1）和角色名。')
       .example('ri        为当前角色掷先攻')
+      .example('ri +5     为当前角色掷先攻，调整值为+5')
       .example('ri 哥布林  为哥布林掷先攻')
-      .action(async ({ session }, name) => {
-        const characterName = name || this.getCharacterName(session, characterManager)
+      .example('ri -1 哥布林 为哥布林掷先攻，调整值为-1')
+      .action(async ({ session }, modifierArg, target) => {
+        let characterName: string;
+        let modValue = 0;
+
+        const isModifierString = (s: string) => s && (s.startsWith('+') || s.startsWith('-'));
+
+        if (modifierArg && target) {
+            const parsedMod = parseInt(modifierArg);
+            if (!isNaN(parsedMod)) {
+                modValue = parsedMod;
+            }
+            characterName = target;
+        } else if (modifierArg) {
+            if (isModifierString(modifierArg)) {
+                const parsedMod = parseInt(modifierArg);
+                if (!isNaN(parsedMod)) {
+                    modValue = parsedMod;
+                }
+                characterName = this.getCharacterName(session, characterManager);
+            } else {
+                characterName = modifierArg;
+            }
+        } else {
+            characterName = this.getCharacterName(session, characterManager);
+        }
 
         if (!characterName) {
           return '请指定角色名称或先绑定角色卡！'
         }
 
-        const initiative = this.rollInitiative()
-        this.addToInitiative(characterName, initiative, session.userId)
+        const { d20, total } = this.rollInitiative(modValue);
+        this.addToInitiative(characterName, total, session.userId);
 
-        return `${characterName} 的先攻：d20+敏捷调整值 = ${initiative}`
+        const modText = modValue !== 0 ? ` ${modValue > 0 ? '+' : ''}${modValue}` : '';
+        const resultText = `d20(${d20})${modText} = ${total}`;
+
+        return `${characterName} 的先攻：${resultText}`;
       })
 
     // 先攻列表命令
@@ -264,10 +292,10 @@ export class DND5EGameLogic {
   }
 
   // 掷先攻
-  rollInitiative(): number {
-    const d20 = Random.int(1, 21)
-    const dexMod = Random.int(0, 6) // 简化处理，随机敏捷调整值0-5
-    return d20 + dexMod
+  rollInitiative(modifier: number = 0): { d20: number, total: number } {
+    const d20 = Random.int(1, 21);
+    const total = d20 + modifier;
+    return { d20, total };
   }
 
   // 添加到先攻列表

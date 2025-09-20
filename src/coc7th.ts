@@ -305,11 +305,7 @@ d100=${result.roll} ≤ ${currentSkill} 失败，技能未成长`
     const bestTens = Math.min(tensDigit, ...bonusDice.map(d => d * 10))
     const finalRoll = bestTens + unitsDigit
 
-    let result = '失败'
-    if (finalRoll <= skill / 5) result = '大成功'
-    else if (finalRoll <= skill / 2) result = '极难成功'
-    else if (finalRoll <= skill) result = '成功'
-    else if (finalRoll >= 96) result = '大失败'
+    const result = this.getSuccessLevel(finalRoll, skill);
 
     return { roll: mainRoll, bonusDice, finalRoll, result }
   }
@@ -328,11 +324,7 @@ d100=${result.roll} ≤ ${currentSkill} 失败，技能未成长`
     const worstTens = Math.max(tensDigit, ...penaltyDice.map(d => d * 10))
     const finalRoll = worstTens + unitsDigit
 
-    let result = '失败'
-    if (finalRoll <= skill / 5) result = '大成功'
-    else if (finalRoll <= skill / 2) result = '极难成功'
-    else if (finalRoll <= skill) result = '成功'
-    else if (finalRoll >= 96) result = '大失败'
+    const result = this.getSuccessLevel(finalRoll, skill);
 
     return { roll: mainRoll, penaltyDice, finalRoll, result }
   }
@@ -348,16 +340,17 @@ d100=${result.roll} ≤ ${currentSkill} 失败，技能未成长`
     let winner = '平局'
 
     // 判断胜负
-    const levels = { '大失败': 0, '失败': 1, '成功': 2, '极难成功': 3, '大成功': 4 }
-    const level1 = levels[result1]
-    const level2 = levels[result2]
+    const levels = { '大失败': 0, '失败': 1, '常规成功': 2, '困难成功': 3, '极难成功': 4, '大成功': 5 }
+    const level1 = levels[result1] || 1
+    const level2 = levels[result2] || 1
 
     if (level1 > level2) winner = '甲方胜利'
     else if (level2 > level1) winner = '乙方胜利'
-    else if (level1 === level2 && level1 > 1) {
-      // 同等级成功，比较骰值
-      if (roll1 < roll2) winner = '甲方胜利'
-      else if (roll2 < roll1) winner = '乙方胜利'
+    else if (level1 === level2 && level1 > 1) { // 双方都成功且等级相同时
+        // 比较技能值，技能值高者胜
+        if(skill1 > skill2) winner = '甲方胜利'
+        else if (skill2 > skill1) winner = '乙方胜利'
+        // 技能值也相同则平局
     }
 
     return { roll1, roll2, result1, result2, winner }
@@ -365,11 +358,27 @@ d100=${result.roll} ≤ ${currentSkill} 失败，技能未成长`
 
   // 获取成功等级
   private getSuccessLevel(roll: number, skill: number): string {
-    if (roll <= skill / 5) return '大成功'
-    if (roll <= skill / 2) return '极难成功'
-    if (roll <= skill) return '成功'
-    if (roll >= 96) return '大失败'
-    return '失败'
+    // 大成功
+    if (roll === 1) return '大成功';
+
+    // 大失败
+    if (roll === 100 || (skill < 50 && roll >= 96)) {
+        return '大失败';
+    }
+
+    // 成功等级判断
+    if (roll <= skill) {
+        if (roll <= Math.floor(skill / 5)) {
+            return '极难成功';
+        } else if (roll <= Math.floor(skill / 2)) {
+            return '困难成功';
+        } else {
+            return '常规成功';
+        }
+    }
+
+    // 失败
+    return '失败';
   }
 
   // 技能成长检定
