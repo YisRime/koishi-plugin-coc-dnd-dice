@@ -127,29 +127,23 @@ export class DND5EGameLogic {
       .example('ri 哥布林  为哥布林掷先攻')
       .example('ri -1 哥布林 为哥布林掷先攻，调整值为-1')
       .action(async ({ session }, modifierArg, target) => {
-        let characterName: string;
+        let characterName: string | undefined;
         let modValue = 0;
 
-        const isModifierString = (s: string) => s && (s.startsWith('+') || s.startsWith('-'));
+        const isModifierString = (s: any): s is string => typeof s === 'string' && (s.startsWith('+') || s.startsWith('-'));
 
-        if (modifierArg && target) {
-            const parsedMod = parseInt(modifierArg);
-            if (!isNaN(parsedMod)) {
-                modValue = parsedMod;
-            }
-            characterName = target;
-        } else if (modifierArg) {
-            if (isModifierString(modifierArg)) {
-                const parsedMod = parseInt(modifierArg);
-                if (!isNaN(parsedMod)) {
-                    modValue = parsedMod;
-                }
-                characterName = this.getCharacterName(session, characterManager);
-            } else {
-                characterName = modifierArg;
-            }
+        if (isModifierString(modifierArg)) {
+          modValue = parseInt(modifierArg) || 0;
+          characterName = target;
+        } else if (isModifierString(target)) {
+          modValue = parseInt(target) || 0;
+          characterName = modifierArg;
         } else {
-            characterName = this.getCharacterName(session, characterManager);
+          characterName = modifierArg;
+        }
+
+        if (!characterName) {
+          characterName = this.getCharacterName(session, characterManager);
         }
 
         if (!characterName) {
